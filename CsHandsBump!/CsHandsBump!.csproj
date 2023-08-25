@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <RootNamespace>HandsBump</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyVersion>1.0.819.124</AssemblyVersion>
+    <FileVersion>1.0.2308.124</FileVersion>
+    <Product>$(AssemblyName)</Product>
+    <AnalysisLevel>6.0-minimum</AnalysisLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EleCho.ConsoleAnsi" Version="1.0.0" />
+    <PackageReference Include="NullLib.ConsoleEx" Version="1.0.4.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="EUtility.ConsoleEx.Message">
+      <HintPath>..\..\EUtility\EUtility.Console.BottomMessage\bin\Debug\net6.0\EUtility.ConsoleEx.Message.dll</HintPath>
+    </Reference>
+    <Reference Include="EUtility.StringEx.StringExtension">
+      <HintPath>..\..\EUtility\EUtility.Console.BottomMessage\bin\Debug\net6.0\EUtility.StringEx.StringExtension.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

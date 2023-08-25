@@ -318,18 +318,30 @@ internal partial class Program
 
     private static void GameOptionCreater(Preset preset)
     {
-        /*
-        int GetInputIntValue(int min, int max)
-        {
-            Console.Clear();
-            WriteLogo();
+        Preset p = preset;
 
-            Console.WriteLine();
-            Console.Write("请输入值：");
-            
+        void SetProp(int id, string prot)
+        {
+            WriteLogo();
+            Console.Write(prot);
+            e
         }
-        Preset pc = preset;
-        PropSeter(pc.PlayerOption);*/
+
+        WriteLogo();
+        int select = Window.Menu.WriteMenu(
+            new Dictionary<string, string>
+            {
+                { "名称: " + p.PresetName, "设置预设名称" },
+                { "人数: " + p.PlayerCount, "设置游玩人数" },
+                { "玩家设定", "设置每个玩家的初始设定" }
+            }
+        );
+
+        //switch (select)
+        //{
+        //    case 0:
+
+        //}
     }
 
     static void ClassicStartMenu()

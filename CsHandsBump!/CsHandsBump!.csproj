@@ -22,16 +22,10 @@
 
   <ItemGroup>
     <PackageReference Include="EleCho.ConsoleAnsi" Version="1.0.0" />
+    <PackageReference Include="EUtility.ConsoleEx.Message" Version="1.0.0" />
+    <PackageReference Include="EUtility.ConvertEx.Convert" Version="1.0.0" />
+    <PackageReference Include="EUtility.StringEx.StringExtension" Version="1.0.0" />
     <PackageReference Include="NullLib.ConsoleEx" Version="1.0.4.4" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="EUtility.ConsoleEx.Message">
-      <HintPath>..\..\EUtility\EUtility.Console.BottomMessage\bin\Debug\net6.0\EUtility.ConsoleEx.Message.dll</HintPath>
-    </Reference>
-    <Reference Include="EUtility.StringEx.StringExtension">
-      <HintPath>..\..\EUtility\EUtility.Console.BottomMessage\bin\Debug\net6.0\EUtility.StringEx.StringExtension.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
 </Project>

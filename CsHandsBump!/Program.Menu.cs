@@ -33,7 +33,7 @@ internal partial class Program
             public static void Null() { }
 
             public static Delegate GetFunctionInstance(string name)
-            {
+                {
                 return name switch
                 {
                     "[get]$string$#int#@formatspace@" => new Func<int, string>(_getspace),
@@ -78,7 +78,7 @@ internal partial class Program
                     message.Add($"{unit.Value.Key} {unit.Value.Value}");
                 }
                 string output = string.Join("    ", message);
-                Console.Write(output + InternalFunctions.GetFunctionInstance("[get]$string$#int#@formatspace@").DynamicInvoke(InternalFunctions.GetFunctionInstance("[get]$int$#string#@stringlength@").DynamicInvoke(output)));
+                Console.Write(output + new string(' ',Console.WindowWidth - output.GetStringInConsoleGridWidth() - 2));
                 Console.CursorTop = currentTop;
                 Console.CursorLeft= currentLeft;
             }
@@ -86,8 +86,6 @@ internal partial class Program
 
         public static class Menu
         {
-            static Func<int, string> getspace = (Func<int, string>)InternalFunctions.GetFunctionInstance("[get]$string$#int#@formatspace@");
-            static Func<string, int> getstringspace = (Func<string, int>)InternalFunctions.GetFunctionInstance("[get]$int$#string#@stringlength@");
             static MessageOutputer menuguide = new()
                 {
                     new MessageUnit()

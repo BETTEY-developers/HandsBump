@@ -5,6 +5,8 @@ VisualStudioVersion = 17.6.33815.320
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CsHandsBump!", "CsHandsBump!\CsHandsBump!.csproj", "{CD4BDD5A-C720-4A6B-A3AB-21414B06CB32}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HandsBumpPresetCreater", "HandsBumpPresetCreater\HandsBumpPresetCreater.csproj", "{7E836A98-D0A1-495C-BD07-9CE5DE07703E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,18 @@ Global
 		{CD4BDD5A-C720-4A6B-A3AB-21414B06CB32}.Release|x64.Build.0 = Release|Any CPU
 		{CD4BDD5A-C720-4A6B-A3AB-21414B06CB32}.Release|x86.ActiveCfg = Release|Any CPU
 		{CD4BDD5A-C720-4A6B-A3AB-21414B06CB32}.Release|x86.Build.0 = Release|Any CPU
+		{7E836A98-D0A1-495C-BD07-9CE5DE07703E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E836A98-D0A1-495C-BD07-9CE5DE07703E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E836A98-D0A1-495C-BD07-9CE5DE07703E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7E836A98-D0A1-495C-BD07-9CE5DE07703E}.Debug|x64.Build.0 = Debug|Any CPU
+		{7E836A98-D0A1-495C-BD07-9CE5DE07703E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7E836A98-D0A1-495C-BD07-9CE5DE07703E}.Debug|x86.Build.0 = Debug|Any CPU
+		{7E836A98-D0A1-495C-BD07-9CE5DE07703E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E836A98-D0A1-495C-BD07-9CE5DE07703E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E836A98-D0A1-495C-BD07-9CE5DE07703E}.Release|x64.ActiveCfg = Release|Any CPU
+		{7E836A98-D0A1-495C-BD07-9CE5DE07703E}.Release|x64.Build.0 = Release|Any CPU
+		{7E836A98-D0A1-495C-BD07-9CE5DE07703E}.Release|x86.ActiveCfg = Release|Any CPU
+		{7E836A98-D0A1-495C-BD07-9CE5DE07703E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

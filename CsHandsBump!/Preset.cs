@@ -1,23 +1,24 @@
 ﻿namespace HandsBump;
 
-internal struct Preset
+internal class Preset
 {
-    public struct Player
+    public class Player
     {
-        [MemberId(10)]
+        [MemberId(10, typeof(int))]
         public int Target { get; set; }
-        [MemberId(11)]
+        [MemberId(11, typeof(int))]
         public int HandCount { get; set; }
-        [MemberId(12)]
+        [MemberId(12, typeof(int))]
         public int StartupNumber { get; set; }
+        public int TargetPlayerId { get; set; }
     }
 
-    [MemberId(0)]
+    [MemberId(0, typeof(string))]
     public string PresetName { get; set; }
 
-    [MemberId(1)]
+    [MemberId(1, typeof(int))]
     public int PlayerCount { get; set; }
 
-    [MemberId(2)]
+    [MemberId(2, typeof(List<Player>))]
     public List<Player> PlayerOption { get; set; }
 } 

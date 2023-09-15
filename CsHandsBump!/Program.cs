@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
+using System.IO.Pipes;
 
 namespace HandsBump;
 
@@ -29,131 +30,14 @@ internal partial class Program
     static ConsoleSize StartupConsoleSize = new ConsoleSize();
 
     static Thread? ResizeThread;
+
+    static List<Preset> Presets = new List<Preset>();
+
+    static bool IsPipeOpened = false;
+
     static bool canresize = false;
 
-    [System.Runtime.InteropServices.DllImport("Kernel32.dll")]
-    static extern IntPtr GetStdHandle(uint nStdHandle);
-
-    [System.Runtime.InteropServices.DllImport("Kernel32.dll")]
-    static extern int SetConsoleMode(IntPtr hConsoleHandle, uint dwMode);
-
-    [System.Runtime.InteropServices.DllImport("Kernel32.dll")]
-    static extern int GetLastError();
-
-    [System.Runtime.InteropServices.DllImport("Kernel32.dll")]
-    static extern int GetConsoleMode(IntPtr hConsoleHandle, ref uint lpMode);
-
-    static bool SetConsoleOutMode()
-    {
-        int _errorcode = 0;
-        try
-        {
-            IntPtr ConsoleHandle = GetStdHandle(0xFFFFFFF5);
-            uint mode = 0;
-            int getstatus = GetConsoleMode(ConsoleHandle, ref mode);
-            if (getstatus != 0)
-            {
-                _errorcode = GetLastError();
-                throw new Win32Exception(_errorcode);
-            }
-            int status = SetConsoleMode(ConsoleHandle, mode|0x0004);
-            if(status != 0)
-            {
-                _errorcode = GetLastError();
-                throw new Win32Exception(_errorcode);
-            }
-            return false;
-        }
-        catch(Win32Exception e)
-        {
-            Console.Clear();
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("发生了一些错误。");
-            Console.WriteLine("错误码：" + _errorcode);
-            Console.WriteLine("Win32Error: " + e.Message);
-            //Console.WriteLine("使用 Err 工具获取错误信息");
-            Console.WriteLine("按任意键退出...");
-            Console.ReadKey();
-            return true;
-        }
-        catch(Exception e)
-        {
-            Console.Clear();
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("发生了一些错误。");
-            Console.WriteLine(e.Message);
-            Console.WriteLine("按任意键退出...");
-            Console.ReadKey();
-            return true;
-        }
-    }
-
-    static bool InitConsoleSizeStruct()
-    {
-        try
-        {
-            StartupConsoleSize.Width = Console.WindowWidth;
-            StartupConsoleSize.Height = Console.WindowHeight;
-            return false;
-        }
-        catch
-        {
-            Console.Clear();
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("发生了一些错误。");
-            Console.WriteLine("该应用不支持此系统");
-            Console.WriteLine("按任意键退出...");
-            Console.ReadKey();
-            return true;
-        }
-    }
-
-    static void ResetConsoleSize()
-    {
-        try
-        {
-            Console.WindowWidth = StartupConsoleSize.Width; //设置窗体宽度
-            Console.BufferWidth = StartupConsoleSize.Width; //设置缓存宽度
-            Console.WindowHeight = StartupConsoleSize.Height;//设置窗体高度
-            Console.BufferHeight = StartupConsoleSize.Height;//设置缓存高度
-            Console.WindowWidth = StartupConsoleSize.Width; //重新设置窗体宽度
-        }
-        catch { }
-    }
-
-    static bool OpenResizeConsoleThread()
-    {
-        try
-        {
-            canresize = true;
-            Thread thread = new Thread(() =>
-            {
-                while (true)
-                {
-                    if(canresize)
-                        ResetConsoleSize();
-                    Thread.Sleep(1000);
-                }
-            });
-            thread.Name = "ResizeConsole";
-            thread.IsBackground = true;
-            thread.Start();
-            ResizeThread = thread;
-            return false;
-        }
-        catch
-        {
-            Console.Clear();
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("发生了一些错误。");
-            Console.WriteLine("在启动新线程时发生了错误。");
-            Console.WriteLine("电脑运行内存不足。");
-            Console.WriteLine("建议：退出一些应用并重新启动该应用。");
-            Console.WriteLine("按任意键退出...");
-            Console.ReadKey();
-            return true;
-        }
-    }
+    
 
     static void WriteLogo()
     {
@@ -201,7 +85,9 @@ internal partial class Program
         List<StringBuilder> descriptionlist = new();
 
         List<FileInfo> presetfiles = new();
-        while (true) try
+
+        while (true) 
+            try
             {
                 if (!Directory.Exists("Presets"))
                     Directory.CreateDirectory("Presets");
@@ -233,12 +119,12 @@ internal partial class Program
         foreach( var preset in presetfiles )
         {
             var pb = preset.OpenRead();
-            Span<byte> bytes = new();
-            pb.Read(bytes);
+            byte[] data = new byte[preset.Length];
+            pb.Read(data);
             List<byte> j = new();
             try
             {
-                Encoding.Default.GetString(bytes).Split("#").ToList().ForEach((s) => j.Add(byte.Parse(s)));
+                Encoding.Default.GetString(data).Split("#").ToList().ForEach((s) => j.Add(byte.Parse(s)));
             }
             catch(FormatException)
             {
@@ -293,16 +179,16 @@ internal partial class Program
             StringBuilder sb = new();
             sb.AppendLine($"{preset.PresetName} 预设 {$"玩家数量 {preset.PlayerCount}",6}");
             sb.AppendLine();
-            sb.AppendLine($"{"玩家",-10}|{"需赢点数",-10}|{"hand数",-10}|{"起始点数",-10}");
-            int currentplayerindex = 0;
+            sb.AppendLine($"{"TargetPlayer",-15}|{"Target",-10}|{"Hand Count",-10}|{"Startup",-10}|");
             foreach(var player in preset.PlayerOption)
             {
-                sb.AppendLine($"{$"玩家{currentplayerindex}",-10}|{player.Target,-10}|{player.HandCount,-10}|{player.StartupNumber,-10}");
+                sb.AppendLine($"{$"Player{player.TargetPlayerId}",-15}|{player.Target,-10}|{player.HandCount,-10}|{player.StartupNumber,-10}");
             }
             items.Add(preset.PresetName, sb.ToString());
             descriptionlist.Add(sb);
         }
 
+        CreatePipe();
         
         select = Window.Menu.WriteLargerMenu(items, Math.Min(8, items.Count));
 
@@ -314,34 +200,128 @@ internal partial class Program
         {
             GameOptionCreater(new Preset());
         }
+        else
+        {
+            PresetInfoPage(presets[select - 2]);
+        }
     }
 
-    private static void GameOptionCreater(Preset preset)
+    private static (Preset preset, int flag) PresetInfoPage(Preset preset)
     {
-        Preset p = preset;
-
-        void SetProp(int id, string prot)
+        while (true)
         {
+            Console.Clear();
             WriteLogo();
-            Console.Write(prot);
-            e
-        }
-
-        WriteLogo();
-        int select = Window.Menu.WriteMenu(
-            new Dictionary<string, string>
+            int select = Window.Menu.WriteMenu(new()
             {
-                { "名称: " + p.PresetName, "设置预设名称" },
-                { "人数: " + p.PlayerCount, "设置游玩人数" },
-                { "玩家设定", "设置每个玩家的初始设定" }
+                { "查看预设信息", "查看该预设的所有信息" },
+                { "使用该预设", "通过此预设开始游戏" },
+                { "修改该预设", "修改这个预设的所有选项" }
+            });
+            if (select == 0)
+            {
+                StringBuilder sb = new();
+                sb.AppendLine($"{preset.PresetName} 预设 {$"玩家数量 {preset.PlayerCount}",6}");
+                sb.AppendLine();
+                sb.AppendLine($"{"TargetPlayer",-15}|{"Target",-10}|{"Hand Count",-10}|{"Startup",-10}|");
+                foreach (var player in preset.PlayerOption)
+                {
+                    sb.AppendLine($"{$"Player{player.TargetPlayerId}",-15}|{player.Target,-10}|{player.HandCount,-10}|{player.StartupNumber,-10}");
+                }
+                Window.Menu.LargerContentBoard(sb.ToString().Split(Environment.NewLine));
             }
-        );
+            else if(select == 1)
+            {
+                // TODO: Startup Game
+            }
+            else
+            {
+                var pre = GameOptionCreater(preset);
 
-        //switch (select)
-        //{
-        //    case 0:
+                int saveoptselect = Window.Menu.WriteMenu(new()
+                {
+                    { "直接修改", "直接修改这个预设\n注意：将会覆盖这个预设的所有内容" },
+                    { "添加", "当作副本添加一个预设" }
+                });
 
-        //}
+                if( saveoptselect == 0)
+                {
+                    return (pre, 0);
+                }
+                else
+                {
+                    return (pre, 1);
+                }
+            }
+        }
+    }
+
+    private static async void CreatePipe()
+    {
+        if(IsPipeOpened) { return; }
+
+        await Task.Run(() =>
+        {
+            NamedPipeServerStream namedPipe = new NamedPipeServerStream("HandsBump");
+            IsPipeOpened = true;
+            namedPipe.WaitForConnection();
+
+            List<byte> bytes = new();
+            int dbyte = -1;
+            while (!((dbyte = namedPipe.ReadByte()) == 0)) bytes.Add((byte)dbyte);
+
+            namedPipe.Close();
+
+            IsPipeOpened = false;
+            Preset preset = JsonSerializer.Deserialize<Preset>(Encoding.UTF8.GetString(bytes.ToArray()));
+            
+        });
+    }
+
+    private static Preset GameOptionCreater(Preset preset = default)
+    {
+        var pre = Setting<Preset>((prop, type) =>
+        {
+            var list = (List<Preset.Player>)Convert.ChangeType(prop, type) ?? new List<Preset.Player>();
+            while (true)
+            {
+                Console.Clear();
+                WriteLogo();
+                Dictionary<string, string> items = new();
+                int index = 0;
+                foreach (var item in list)
+                {
+                    items.Add($"第{index}位玩家设置", $"第{index}位玩家设置");
+                    index++;
+                }
+                items.Add("添加", "添加一个玩家设置");
+                items.Add("退出", "退出");
+                int select = Window.Menu.WriteLargerMenu(items);
+                if (select == items.Count - 1)
+                {
+                    return list;
+                }
+                else if (select == items.Count - 1 - 1)
+                {
+                    list.Add(new Preset.Player());
+                    list[select] = Setting((prop1, _) => prop1, Default: list[select]);
+                }
+                else
+                {
+                    list[select] = Setting((prop1, _) => prop1, Default: list[select]);
+                }
+            }
+        }, OtherTypeToString: (obj, type) =>
+        {
+            List<Preset.Player> player = obj as List<Preset.Player> ?? new();
+            StringBuilder sb = new();
+            for (int i = 0; i < Math.Min(5, player.Count); i++)
+            {
+                sb.Append($"{player[i].Target,-3}");
+            }
+            return sb.ToString();
+        }, Default: preset??new());
+        return pre;
     }
 
     static void ClassicStartMenu()
@@ -446,41 +426,7 @@ internal partial class Program
         }
     }
 
-    static bool LoadGame()
-    {
-        bool LoadGameRecord()
-        {
-            try
-            {
-                if (!File.Exists("GameRecord.cod"))
-                    return false;
-
-                List<byte> bytes = new List<byte>();
-                File.ReadAllText("GameRecord.cod").Split("#").ToList().ForEach(v => bytes.Add(byte.Parse(v)));
-
-                string json = Encoding.UTF8.GetString(bytes.ToArray());
-                Game.FormatGameRecords(json);
-                return false;
-            }
-            catch (Exception e) when (e is JsonException or FormatException)
-            {
-                Console.Clear();
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("发生了一些错误。");
-                Console.WriteLine("GameRecord.cod 文件发生了错误。");
-                Console.WriteLine("该文件疑似被篡改，不应篡改这些文件。");
-                Console.WriteLine("建议：备份后删除文件并重启应用。");
-                Console.WriteLine("注意：不备份你将损失你的数据！");
-                Console.WriteLine("按任意键退出...");
-                Console.ReadKey();
-                return true;
-            }
-        }
-
-        
-
-        return LoadGameRecord() || InitConsoleSizeStruct() || OpenResizeConsoleThread() ;
-    }
+    
 
     static (int playercount, Dictionary<int,List<int>>? option) GameArgumentCreater(ClassicPlayMode classicPlayMode)
     {
@@ -509,7 +455,7 @@ internal partial class Program
             Console.WriteLine("发生了一些错误。");
             Console.WriteLine("您选择的配置预设 文件发生了错误。");
             Console.WriteLine("该文件疑似被篡改，不应篡改这些文件。");
-            Console.WriteLine("建议：备份后使用 JSON解析器 辅助更改文件并保存文件。");
+            Console.WriteLine("建议：备份后使用 PSON解析器 辅助更改文件并保存文件。");
             Console.WriteLine("按任意键继续...");
             Console.ReadKey();
             return (0, null);
@@ -521,8 +467,6 @@ internal partial class Program
         Game game = new Game();
         game.InitPlayers(playercount, option);
     }
-
-    
 
     static void Main(string[] args)
     {

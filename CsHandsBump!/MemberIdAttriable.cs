@@ -35,5 +35,22 @@ namespace HandsBump
 
             prop.SetValue(obj, setvalue);
         }
+
+        public static Type GetPropertyTypeFromId(int id, Type type)
+        {
+            var prop = type.GetProperties().First((prop) =>
+            {
+                MemberIdAttribute? v = prop.GetCustomAttribute<MemberIdAttribute>();
+                if (v == null)
+                    return false;
+
+                if (v.Id == id)
+                    return true;
+                else
+                    return false;
+            });
+
+            return prop.PropertyType;
+        }
     }
 }

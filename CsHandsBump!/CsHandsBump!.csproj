@@ -6,8 +6,8 @@
     <RootNamespace>HandsBump</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <AssemblyVersion>1.0.819.124</AssemblyVersion>
-    <FileVersion>1.0.2308.124</FileVersion>
+    <AssemblyVersion>1.0.831.153</AssemblyVersion>
+    <FileVersion>1.0.2308.153</FileVersion>
     <Product>$(AssemblyName)</Product>
     <AnalysisLevel>6.0-minimum</AnalysisLevel>
   </PropertyGroup>
@@ -23,8 +23,6 @@
   <ItemGroup>
     <PackageReference Include="EleCho.ConsoleAnsi" Version="1.0.0" />
     <PackageReference Include="EUtility.ConsoleEx.Message" Version="1.0.0" />
-    <PackageReference Include="EUtility.ConvertEx.Convert" Version="1.0.0" />
-    <PackageReference Include="EUtility.StringEx.StringExtension" Version="1.0.0" />
     <PackageReference Include="NullLib.ConsoleEx" Version="1.0.4.4" />
   </ItemGroup>
 

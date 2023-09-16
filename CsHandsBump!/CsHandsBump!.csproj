@@ -6,8 +6,8 @@
     <RootNamespace>HandsBump</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <AssemblyVersion>1.0.831.153</AssemblyVersion>
-    <FileVersion>1.0.2308.153</FileVersion>
+    <AssemblyVersion>1.0.916.161</AssemblyVersion>
+    <FileVersion>1.0.2309.161</FileVersion>
     <Product>$(AssemblyName)</Product>
     <AnalysisLevel>6.0-minimum</AnalysisLevel>
   </PropertyGroup>

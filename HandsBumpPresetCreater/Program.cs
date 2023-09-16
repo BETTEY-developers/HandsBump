@@ -7,7 +7,7 @@ using System.Diagnostics;
 using System.IO.Pipes;
 using System.Reflection;
 using System.Text;
-
+using System.Text.Json;
 using static System.Console;
 internal class Program
 {
@@ -210,23 +210,51 @@ internal class Program
         });
         if(select == 0)
         {
-            string json = System.Text.Json.JsonSerializer.Serialize<Preset>(pre);
-            List<byte> bin = new(Encoding.Default.GetBytes(json));
-            List<string> bytesstr = new();
-            bin.ForEach(x=>bytesstr.Add(x.ToString()));
-            string content = string.Join('#', bytesstr);;
-            string vaildname = pre.PresetName;
-            foreach(char novaild in Path.GetInvalidFileNameChars())
-            {
-                vaildname = vaildname.Replace(novaild, '-');
-            }
-            StreamWriter sw = new(vaildname+".pre");
-            sw.WriteLine(content);
-            sw.Close();
+            SaveToFile(pre);
         }
         else
         {
-            //NamedPipeClientStream namedPipeClientStream = new NamedPipeClientStream()
+            bool finded = false;
+            foreach (var p in Process.GetProcesses())
+                if (p.ProcessName == "CsHandsBump!")
+                    finded = true;
+            if (finded)
+                SendPresetToPipe(pre);
+            else
+            {
+                WriteLine("未找到游戏进程，仅保存文件");
+            }
+            SaveToFile(pre);
         }
+        ReadLine();
+        Clear();
+        WL();
+        WriteLine("操作成功！");
+        ReadLine();
+    }
+
+    private static void SendPresetToPipe(Preset pre)
+    {
+        NamedPipeClientStream namedPipeClientStream = new NamedPipeClientStream("HandsBump");
+        namedPipeClientStream.Connect();
+        byte[] data = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(pre, typeof(Preset)));
+        namedPipeClientStream.Write(data, 0, data.Length);
+    }
+
+    private static void SaveToFile(Preset pre)
+    {
+        string json = System.Text.Json.JsonSerializer.Serialize<Preset>(pre);
+        List<byte> bin = new(Encoding.Default.GetBytes(json));
+        List<string> bytesstr = new();
+        bin.ForEach(x => bytesstr.Add(x.ToString()));
+        string content = string.Join('#', bytesstr); ;
+        string vaildname = pre.PresetName;
+        foreach (char novaild in Path.GetInvalidFileNameChars())
+        {
+            vaildname = vaildname.Replace(novaild, '-');
+        }
+        StreamWriter sw = new(vaildname + ".pre");
+        sw.WriteLine(content);
+        sw.Close();
     }
 }

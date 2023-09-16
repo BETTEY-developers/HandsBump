@@ -147,7 +147,6 @@ namespace HandsBump
                     return true;
                 }
             }*/
-
             bool LoadGameRecord()
             {
                 try

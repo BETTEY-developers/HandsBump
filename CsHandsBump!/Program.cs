@@ -31,8 +31,10 @@ internal partial class Program
 
     static Thread? ResizeThread;
 
-    static List<Preset> Presets = new List<Preset>();
+    static List<Preset> Presets { get { return presets; } set { ischanged = true; presets = value; } }
+    static List<Preset> presets = new List<Preset>();
 
+    static bool ischanged = false;
     static bool IsPipeOpened = false;
 
     static bool canresize = false;
@@ -76,6 +78,7 @@ internal partial class Program
 
     private static void CustomStartMenu()
     {
+Startup:
         Console.Clear();
         WriteLogo();
 
@@ -114,6 +117,7 @@ internal partial class Program
             {
                 items.Add("返回上一级菜单","未找到任何预设文件");
             }
+        items.Add("刷新", "刷新已找到的预设");
         List<Preset> presets = new();
 
         foreach( var preset in presetfiles )
@@ -156,7 +160,9 @@ internal partial class Program
 
             try
             {
-                presets.Add(JsonSerializer.Deserialize<Preset>(s));
+                var item = JsonSerializer.Deserialize<Preset>(s);
+                if(!Presets.Contains(item))
+                    Presets.Add(item);
             }
             catch(JsonException)
             {
@@ -174,7 +180,7 @@ internal partial class Program
 
         int select = 0;
         
-        foreach(var preset in presets)
+        foreach(var preset in Presets)
         {
             StringBuilder sb = new();
             sb.AppendLine($"{preset.PresetName} 预设 {$"玩家数量 {preset.PlayerCount}",6}");
@@ -184,7 +190,11 @@ internal partial class Program
             {
                 sb.AppendLine($"{$"Player{player.TargetPlayerId}",-15}|{player.Target,-10}|{player.HandCount,-10}|{player.StartupNumber,-10}");
             }
-            items.Add(preset.PresetName, sb.ToString());
+            try
+            {
+                items.Add(preset.PresetName, sb.ToString());
+            }
+            catch { }
             descriptionlist.Add(sb);
         }
 
@@ -200,9 +210,13 @@ internal partial class Program
         {
             GameOptionCreater(new Preset());
         }
+        else if(select == 2)
+        {
+            goto Startup;
+        }
         else
         {
-            PresetInfoPage(presets[select - 2]);
+            PresetInfoPage(presets[select - 3]);
         }
     }
 
@@ -264,17 +278,25 @@ internal partial class Program
         {
             NamedPipeServerStream namedPipe = new NamedPipeServerStream("HandsBump");
             IsPipeOpened = true;
-            namedPipe.WaitForConnection();
+            while(true)
+            {
+                namedPipe.WaitForConnection();
 
-            List<byte> bytes = new();
-            int dbyte = -1;
-            while (!((dbyte = namedPipe.ReadByte()) == 0)) bytes.Add((byte)dbyte);
+                List<byte> bytes = new();
+                int vaildlen = 0;
+                while (true)
+                {
+                    byte[] data = new byte[4096];
+                    int count = namedPipe.Read(data, 0, data.Length);
+                    vaildlen += count;
+                    if (count == 0)
+                        break;
+                    bytes.AddRange(data);
+                }
 
-            namedPipe.Close();
-
-            IsPipeOpened = false;
-            Preset preset = JsonSerializer.Deserialize<Preset>(Encoding.UTF8.GetString(bytes.ToArray()));
-            
+                Preset preset = JsonSerializer.Deserialize<Preset>(Encoding.UTF8.GetString(bytes.ToArray()[..vaildlen]));
+                Presets.Add(preset);
+            }
         });
     }
 
@@ -350,7 +372,9 @@ internal partial class Program
     
     static void Test()
     {
-        Window.Menu.LargerContentBoard(Enumerable.Repeat("我是测试1145141919810aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaassssssssssssssssssssssssssssssssssaaa", 50).ToArray());
+        //Window.Menu.LargerContentBoard(Enumerable.Repeat("我是测试1145141919810aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaassssssssssssssssssssssssssssssssssaaa", 50).ToArray());
+        Console.WriteLine(Process.GetCurrentProcess().ProcessName);
+        Console.ReadLine();
     }
 #endif
 

@@ -10,7 +10,10 @@ namespace HandsBump
     {
         public static void StartNewGame(Preset preset)
         {
+            CurrentGame = new Game(preset);
+            Console.Clear();
 
+            WriteLogo();
         }
     }
 }

@@ -1,13 +1,7 @@
-﻿using System.ComponentModel;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Xml.Serialization;
 using System.IO.Pipes;
-
-using GameOption = System.Collections.Generic.Dictionary<int, System.Collections.Generic.List<int>>;
 using HandsBump.Options;
 
 namespace HandsBump;
@@ -30,7 +24,7 @@ internal partial class Program
 
     
 
-    static void WriteLogo()
+    public static void WriteLogo()
     {
         Console.WriteLine("Hands Bump!  (Copyright) Amlight-Elipese 2023");
         Console.WriteLine();
@@ -42,10 +36,10 @@ internal partial class Program
         {
             Console.Clear();
             WriteLogo();
-            int select = Window.Menu.WriteMenu(
+            int select = Menu.WriteMenu(
                 new Dictionary<string, string>
                 {
-                { "经典", "传统的碰手指玩法，支持二人、三人或四人。\n默认每人两个hand，初始1点，5点赢" },
+                { "经典", "传统的碰手指玩法，支持二人、三人或四人。\n默认每人两个hand，初始1点，每hand 5点收hand" },
                 { "自定义", "支持自定义初始点数、结束点数、人数及hand数" },
                 { "返回上一级菜单", "返回上个菜单" }
                 });
@@ -113,7 +107,7 @@ internal partial class Program
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine("发生了一些错误。");
                     Console.WriteLine(preset.Name + "文件格式不正确。");
-                    if (Window.Menu.WriteMenu(new() { { "继续", "继续并忽略此条消息" }, { "继续，但忽略以后此类消息", "继续，但忽略以后此类消息" } }) == 1)
+                    if (Menu.WriteMenu(new() { { "继续", "继续并忽略此条消息" }, { "继续，但忽略以后此类消息", "继续，但忽略以后此类消息" } }) == 1)
                         allowtypes.Add(typeof(FormatException));
                 }
             }
@@ -125,7 +119,7 @@ internal partial class Program
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine("发生了一些错误。");
                     Console.WriteLine(preset.Name + "段落数值太大或太小。");
-                    if (Window.Menu.WriteMenu(new() { { "继续", "继续并忽略此条消息" }, { "继续，但忽略以后此类消息", "继续，但忽略以后此类消息" } }) == 1)
+                    if (Menu.WriteMenu(new() { { "继续", "继续并忽略此条消息" }, { "继续，但忽略以后此类消息", "继续，但忽略以后此类消息" } }) == 1)
                         allowtypes.Add(typeof(OverflowException));
                 }
             }
@@ -146,7 +140,7 @@ internal partial class Program
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine("发生了一些错误。");
                     Console.WriteLine(preset.Name + "无法反序列化为对象。");
-                    if (Window.Menu.WriteMenu(new() { { "继续", "继续并忽略此条消息" }, { "继续，但忽略以后此类消息", "继续，但忽略以后此类消息" } }) == 1)
+                    if (Menu.WriteMenu(new() { { "继续", "继续并忽略此条消息" }, { "继续，但忽略以后此类消息", "继续，但忽略以后此类消息" } }) == 1)
                         allowtypes.Add(typeof(JsonException));
                 }
             }
@@ -203,7 +197,7 @@ Startup:
 
         CreatePipe(normalNewPresets.Add);
         
-        select = Window.Menu.WriteLargerMenu(items, Math.Min(8, items.Count));
+        select = Menu.WriteLargerMenu(items, Math.Min(8, items.Count));
 
         switch (select)
         {
@@ -245,7 +239,7 @@ Startup:
         {
             Console.Clear();
             WriteLogo();
-            int select = Window.Menu.WriteMenu(new()
+            int select = Menu.WriteMenu(new()
             {
                 { "查看预设信息", "查看该预设的所有信息" },
                 { "使用该预设", "通过此预设开始游戏" },
@@ -264,7 +258,7 @@ Startup:
                         {
                             sb.AppendLine($"{$"Player{player.TargetPlayerId}",-15}|{player.Target,-10}|{player.HandCount,-10}|{player.StartupNumber,-10}");
                         }
-                        Window.Menu.LargerContentBoard(sb.ToString().Split(Environment.NewLine));
+                        Menu.LargerContentBoard(sb.ToString().Split(Environment.NewLine));
                         break;
                     }
 
@@ -276,7 +270,7 @@ Startup:
                     {
                         var pre = GamePresetCreater(preset);
 
-                        int saveoptselect = Window.Menu.WriteMenu(new()
+                        int saveoptselect = Menu.WriteMenu(new()
                         {
                             { "添加", "当作副本添加一个预设(推荐)" },
                             { "直接修改", "直接修改这个预设\n注意：将会覆盖这个预设的所有内容" },
@@ -308,7 +302,7 @@ Startup:
     {
         var pre = Setting((prop, type) =>
         {
-            var list = (List<Preset.Player>)Convert.ChangeType(prop, type) ?? new List<Preset.Player>();
+            var list = (List<Preset.PlayerPreset>)Convert.ChangeType(prop, type) ?? new List<Preset.PlayerPreset>();
             while (true)
             {
                 Console.Clear();
@@ -322,14 +316,14 @@ Startup:
                 }
                 items.Add("添加", "添加一个玩家设置");
                 items.Add("退出", "退出");
-                int select = Window.Menu.WriteLargerMenu(items);
+                int select = Menu.WriteLargerMenu(items);
                 if (select == items.Count - 1)
                 {
                     return list;
                 }
                 else if (select == items.Count - 1 - 1)
                 {
-                    list.Add(new Preset.Player());
+                    list.Add(new Preset.PlayerPreset());
                     list[select] = Setting((prop1, _) => prop1, Default: list[select]);
                 }
                 else
@@ -339,7 +333,7 @@ Startup:
             }
         }, OtherTypeToString: (obj, type) =>
         {
-            List<Preset.Player> player = obj as List<Preset.Player> ?? new();
+            List<Preset.PlayerPreset> player = obj as List<Preset.PlayerPreset> ?? new();
             StringBuilder sb = new();
             for (int i = 0; i < Math.Min(5, player.Count); i++)
             {
@@ -356,7 +350,7 @@ Startup:
         {
             Console.Clear();
             WriteLogo();
-            int select = Window.Menu.WriteMenu(
+            int select = Menu.WriteMenu(
                 new Dictionary<string, string>
                 {
                 { "双人模式", "两个玩家" },
@@ -392,7 +386,7 @@ Startup:
             Console.Title = "Hands Bump!  (Copyright) Amlight-Elipese 2023";
             Console.Clear();
             WriteLogo();
-            int select = Window.Menu.WriteMenu(
+            int select = Menu.WriteMenu(
                 new Dictionary<string, string>
                 {
                 { "开始游戏", "开始HandBump!"},
@@ -429,7 +423,7 @@ Startup:
         while (true)
         {
             Console.Clear();
-            int select = Window.Menu.WriteMenu(
+            int select = Menu.WriteMenu(
                 new Dictionary<string, string>
                 {
                 {"调整控制台大小", "当选择内容不正确时才可使用该选项" },
@@ -459,38 +453,30 @@ Startup:
 
     
 
-    static (int playercount, GameOption? option) GameArgumentCreater(ClassicPlayMode classicPlayMode)
+    static Preset GameArgumentCreater(ClassicPlayMode classicPlayMode)
     {
         switch (classicPlayMode)
         {
             case ClassicPlayMode.Twice:
-                return (2, null);
+                return new()
+                {
+                    PlayerCount = 2,
+                    PresetName = "Two Players"
+                };
             case ClassicPlayMode.ThreeTime:
-                return (3, null);
+                return new()
+                {
+                    PlayerCount = 3,
+                    PresetName = "Three Players"
+                };
             case ClassicPlayMode.FourTime:
-                return (4, null);
+                return new()
+                {
+                    PlayerCount = 4,
+                    PresetName = "Four Players"
+                };
         }
-        return (0, null);
-    }
-
-    static (int playercount, GameOption? option) FromPresetArgumentCreater(Preset preset)
-    {
-        GameOption gameoption = new();
-        preset.PlayerOption.ForEach(x =>
-        {
-            gameoption.Add(x.TargetPlayerId, new List<int>
-            {
-                x.HandCount,
-                x.Target
-            });
-        });
-        return (preset.PlayerCount, new());
-    }
-
-    static void ToGame(int playercount, GameOption? option)
-    {
-        Game game = new Game();
-        game.InitPlayers(playercount, option);
+        return new();
     }
 
     static void Main(string[] args)

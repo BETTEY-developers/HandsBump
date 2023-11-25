@@ -42,7 +42,7 @@ namespace HandsBump
 
         public Player() { } 
 
-        public void Add(Player srcPlayer, int srchandindex, int dsthandindex )
+        public void Bump(Player srcPlayer, int srchandindex, int dsthandindex )
         {
             if (dsthandindex >= hands.Count || dsthandindex < 0)
             {

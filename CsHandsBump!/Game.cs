@@ -21,10 +21,7 @@ internal class Game
         public bool IsNullStruct { get; set; }
 
     }
-    public struct InitGameData
-    {
 
-    }
     public class Status
     {
         public int CurrentPlayer = 0;
@@ -40,34 +37,44 @@ internal class Game
     private Guid id;
 
     private int playercount = 0;
+
     private List<Player> players = new List<Player>();
 
-    public Game()
+    public Game(Preset preset)
     {
         StartTime = DateTime.Now;
         id = Guid.NewGuid();
-    }
 
-    public void InitPlayers(int playercount, Dictionary<int,List<int>>? option)
-    {
-        this.playercount = playercount;
+        int playerindex = 0;
 
-        int i = 0;
-        while(i++ < playercount)
+        this.playercount = preset.PlayerCount;
+        foreach(var playeroption in preset.PlayerOption)
         {
-            if (option.ContainsKey(i) || option == null ? false : true)
+            string name = "";
+
+            Console.Clear();
+            Program.WriteLogo();
+            Console.WriteLine("请输入玩家 " + (playerindex + 1) + " 昵称：");
+            name = Console.ReadLine();
+            
+            if (playeroption.Target - 1 == playerindex)
             {
-                Player player = new Player
-                {
-                    HandCount = option[i][0],
-                    Target = option[i][1],
-                    StartupNumber = (option[i].Count == 3) ? option[i][2] : 0
-                };
+                Player player = playeroption;
+                player.Name = name;
                 players.Add(player);
             }
             else
-                players.Add(new());
+            {
+                players.Add(new()
+                {
+                    HandCount = 2,
+                    Name = name,
+                    Target = 10,
+                    StartupNumber = 0
+                });
+            }
         }
+
         status.CurrentPlayer = 0;
         status.WinPlayer = -1;
     }

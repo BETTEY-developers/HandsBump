@@ -2,7 +2,7 @@
 
 internal class Preset
 {
-    public class Player
+    public class PlayerPreset
     {
         [MemberId(10, typeof(int))]
         public int Target { get; set; }
@@ -10,7 +10,16 @@ internal class Preset
         public int HandCount { get; set; }
         [MemberId(12, typeof(int))]
         public int StartupNumber { get; set; }
+        [MemberId(13, typeof(int))]
         public int TargetPlayerId { get; set; }
+
+        public static implicit operator Player(PlayerPreset preset) 
+            => new()
+            {
+                HandCount = preset.HandCount,
+                StartupNumber = preset.StartupNumber,
+                Target = preset.Target
+            };
     }
 
     [MemberId(0, typeof(string))]
@@ -19,6 +28,6 @@ internal class Preset
     [MemberId(1, typeof(int))]
     public int PlayerCount { get; set; }
 
-    [MemberId(2, typeof(List<Player>))]
-    public List<Player> PlayerOption { get; set; }
+    [MemberId(2, typeof(List<PlayerPreset>))]
+    public List<PlayerPreset> PlayerOption { get; set; }
 } 

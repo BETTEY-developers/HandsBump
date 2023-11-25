@@ -21,6 +21,10 @@ internal class Game
         public bool IsNullStruct { get; set; }
 
     }
+    public struct InitGameData
+    {
+
+    }
     public class Status
     {
         public int CurrentPlayer = 0;
@@ -52,11 +56,18 @@ internal class Game
         while(i++ < playercount)
         {
             if (option.ContainsKey(i) || option == null ? false : true)
-                players.Add(new(option[i][0]) { Target = option[i][1] });
+            {
+                Player player = new Player
+                {
+                    HandCount = option[i][0],
+                    Target = option[i][1],
+                    StartupNumber = (option[i].Count == 3) ? option[i][2] : 0
+                };
+                players.Add(player);
+            }
             else
-                players.Add(new(2) { Target = 5 });
+                players.Add(new());
         }
-
         status.CurrentPlayer = 0;
         status.WinPlayer = -1;
     }

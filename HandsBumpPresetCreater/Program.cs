@@ -3,6 +3,7 @@
 using EUtility.ConsoleEx.Message;
 using EUtility.StringEx.StringExtension;
 using HandsBump;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Reflection;
@@ -11,7 +12,7 @@ using System.Text.Json;
 using static System.Console;
 internal class Program
 {
-    public static string sihuo =
+    public static string AUTHOR_NOTE =
         "The sun is always shines." +
         "And the sunshine is always around us." +
         "Forever.";
@@ -237,8 +238,10 @@ internal class Program
     {
         NamedPipeClientStream namedPipeClientStream = new NamedPipeClientStream("HandsBump");
         namedPipeClientStream.Connect();
-        byte[] data = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(pre, typeof(Preset)));
-        namedPipeClientStream.Write(data, 0, data.Length);
+        var stream = new StreamWriter(namedPipeClientStream);
+        stream.Write(JsonSerializer.Serialize(pre));
+        namedPipeClientStream.WaitForPipeDrain();
+        namedPipeClientStream.Close();
     }
 
     private static void SaveToFile(Preset pre)

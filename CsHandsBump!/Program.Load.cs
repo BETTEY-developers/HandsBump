@@ -68,7 +68,7 @@ namespace HandsBump
             }
         }
 
-        static bool InitConsoleSizeStruct()
+        static bool InitConsoleSizeStructure()
         {
             try
             {
@@ -79,7 +79,7 @@ namespace HandsBump
             catch
             {
                 Console.Clear();
-                Console.ForegroundColor = ConsoleColor.Red;
+                Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine("发生了一些错误。");
                 Console.WriteLine("该应用不支持此系统");
                 Console.WriteLine("按任意键退出...");
@@ -124,7 +124,7 @@ namespace HandsBump
             catch
             {
                 Console.Clear();
-                Console.ForegroundColor = ConsoleColor.Red;
+                Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine("发生了一些错误。");
                 Console.WriteLine("在启动新线程时发生了错误。");
                 Console.WriteLine("电脑运行内存不足。");
@@ -178,7 +178,7 @@ namespace HandsBump
 
 
 
-            return LoadGameRecord() || InitConsoleSizeStruct() || OpenResizeConsoleThread();
+            return LoadGameRecord() || InitConsoleSizeStructure() || OpenResizeConsoleThread();
         }
     }
 }

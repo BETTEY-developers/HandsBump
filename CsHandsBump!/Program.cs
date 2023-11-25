@@ -7,21 +7,10 @@ using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 using System.IO.Pipes;
 
+using GameOption = System.Collections.Generic.Dictionary<int, System.Collections.Generic.List<int>>;
+using HandsBump.Options;
+
 namespace HandsBump;
-
-internal enum ClassicPlayMode
-{
-    Twice,
-    ThreeTime,
-    FourTime,
-    Custom
-}
-
-internal struct ConsoleSize
-{
-    public int Width;
-    public int Height;
-}
 
 internal partial class Program
 {
@@ -31,8 +20,8 @@ internal partial class Program
 
     static Thread? ResizeThread;
 
-    static List<Preset> Presets { get { return presets; } set { ischanged = true; presets = value; } }
-    static List<Preset> presets = new List<Preset>();
+    static List<Preset> Presets { get { return _presets; } set { ischanged = true; _presets = value; } }
+    static List<Preset> _presets = new List<Preset>();
 
     static bool ischanged = false;
     static bool IsPipeOpened = false;
@@ -76,51 +65,37 @@ internal partial class Program
         }
     }
 
-    private static void CustomStartMenu()
+    private static List<FileInfo> GetRawPresetFiles()
     {
-Startup:
-        Console.Clear();
-        WriteLogo();
-
-        List<Type> allowtypes = new();
-
-        Dictionary<string, string> items = new();
-        List<StringBuilder> descriptionlist = new();
-
         List<FileInfo> presetfiles = new();
+        try
+        {
+            if (!Directory.Exists("Presets"))
+                Directory.CreateDirectory("Presets");
 
-        while (true) 
-            try
-            {
-                if (!Directory.Exists("Presets"))
-                    Directory.CreateDirectory("Presets");
+            bool fed = false;
+            Directory.EnumerateFiles("Presets")
+                .ToList()
+                .ForEach(
+                (p) =>
+                {
+                    presetfiles.Add(new FileInfo(p));
+                }
+            );
+        }
+        catch
+        {
+            return null;
+        }
 
-                bool fed = false;
-                Directory.EnumerateFiles("Presets")
-                    .ToList()
-                    .ForEach(
-                    (p) =>
-                    {
-                        presetfiles.Add(new FileInfo(p));
-                        fed = true;
-                    }
-                );
-                if(fed)
-                    items.Add("返回上一级菜单", "返回上一个菜单");
-                else
-                    items.Add("返回上一级菜单", "未找到任何预设文件");
+        return presetfiles;
+    }
 
-                items.Add("直接设置","从头设置游戏选项");
-                break;
-            }
-            catch 
-            {
-                items.Add("返回上一级菜单","未找到任何预设文件");
-            }
-        items.Add("刷新", "刷新已找到的预设");
-        List<Preset> presets = new();
-
-        foreach( var preset in presetfiles )
+    private static List<Preset> GetPresetsFromFiles(List<FileInfo> presetfiles)
+    {
+        List<Type> allowtypes = new();
+        List<Preset> result = new();
+        foreach (var preset in presetfiles)
         {
             var pb = preset.OpenRead();
             byte[] data = new byte[preset.Length];
@@ -130,19 +105,19 @@ Startup:
             {
                 Encoding.Default.GetString(data).Split("#").ToList().ForEach((s) => j.Add(byte.Parse(s)));
             }
-            catch(FormatException)
+            catch (FormatException)
             {
-                if(!allowtypes.Contains(typeof(FormatException)))
+                if (!allowtypes.Contains(typeof(FormatException)))
                 {
                     Console.Clear();
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine("发生了一些错误。");
                     Console.WriteLine(preset.Name + "文件格式不正确。");
-                    if(Window.Menu.WriteMenu(new() { { "继续", "继续并忽略此条消息" }, { "继续，但忽略以后此类消息", "继续，但忽略以后此类消息" } }) == 1)
+                    if (Window.Menu.WriteMenu(new() { { "继续", "继续并忽略此条消息" }, { "继续，但忽略以后此类消息", "继续，但忽略以后此类消息" } }) == 1)
                         allowtypes.Add(typeof(FormatException));
                 }
             }
-            catch(OverflowException)
+            catch (OverflowException)
             {
                 if (!allowtypes.Contains(typeof(OverflowException)))
                 {
@@ -155,16 +130,15 @@ Startup:
                 }
             }
 
-
             string s = Encoding.Default.GetString(j.ToArray());
 
             try
             {
                 var item = JsonSerializer.Deserialize<Preset>(s);
-                if(!Presets.Contains(item))
-                    Presets.Add(item);
+                if (!result.Contains(item))
+                    result.Add(item);
             }
-            catch(JsonException)
+            catch (JsonException)
             {
                 if (!allowtypes.Contains(typeof(JsonException)))
                 {
@@ -177,6 +151,35 @@ Startup:
                 }
             }
         }
+        return result;
+    }
+
+    private static void CustomStartMenu()
+    {
+        List<Preset> normalNewPresets = new();
+        List<(Preset item, int index)> changeOriginNewPresets = new(); 
+Startup:
+        Console.Clear();
+        WriteLogo();
+
+        List<FileInfo> presetfiles = GetRawPresetFiles();
+        List<Preset> presets = GetPresetsFromFiles(presetfiles);
+        
+        List<StringBuilder> descriptionlist = new();
+
+        Presets = presets.Concat(normalNewPresets).ToList();
+
+        changeOriginNewPresets.ForEach(item =>
+        {
+            Presets[item.index] = item.item;
+        });
+
+        Dictionary<string, string> items = new()
+        {
+            { "返回上一级菜单", Presets.Count != 0? "返回上一个菜单" : "未找到任何预设" },
+            { "创建新预设", "创建一个新预设" },
+            { "刷新预设", "刷新已经找到的预设" }
+        };
 
         int select = 0;
         
@@ -198,29 +201,45 @@ Startup:
             descriptionlist.Add(sb);
         }
 
-        CreatePipe();
+        CreatePipe(normalNewPresets.Add);
         
         select = Window.Menu.WriteLargerMenu(items, Math.Min(8, items.Count));
 
-        if(select == 0)
+        switch (select)
         {
-            return;
-        }
-        else if(select == 1)
-        {
-            GameOptionCreater(new Preset());
-        }
-        else if(select == 2)
-        {
-            goto Startup;
-        }
-        else
-        {
-            PresetInfoPage(presets[select - 3]);
+            case 0:
+                return;
+            case 1:
+                normalNewPresets.Add(GamePresetCreater(new Preset()));
+                goto Startup;
+            case 2:
+                goto Startup;
+            default:
+                {
+                    (Preset preset, InfoPageStatus status) = PresetInfoPage(presets[select - 3]);
+                    if(status == InfoPageStatus.NoChanges)
+                        goto Startup;
+                    else if(status == InfoPageStatus.CloneToNew)
+                    {
+                        preset.PresetName += " Clone";
+                        normalNewPresets.Add(preset);
+                        goto Startup;
+                    }
+                    else if (status == InfoPageStatus.ChangeToOrigin)
+                    {
+                        changeOriginNewPresets.Add((preset, select - 3));
+                        goto Startup;
+                    }
+                    else if (status == InfoPageStatus.SelectToPlay)
+                    {
+                        break;
+                    }
+                    break;
+                }
         }
     }
 
-    private static (Preset preset, int flag) PresetInfoPage(Preset preset)
+    private static (Preset? preset, InfoPageStatus flag) PresetInfoPage(Preset preset)
     {
         while (true)
         {
@@ -230,79 +249,64 @@ Startup:
             {
                 { "查看预设信息", "查看该预设的所有信息" },
                 { "使用该预设", "通过此预设开始游戏" },
-                { "修改该预设", "修改这个预设的所有选项" }
+                { "修改该预设", "修改这个预设的所有选项" },
+                { "退出", "不对此预设做任何操作并退回到上一级菜单" }
             });
-            if (select == 0)
+            switch (select)
             {
-                StringBuilder sb = new();
-                sb.AppendLine($"{preset.PresetName} 预设 {$"玩家数量 {preset.PlayerCount}",6}");
-                sb.AppendLine();
-                sb.AppendLine($"{"TargetPlayer",-15}|{"Target",-10}|{"Hand Count",-10}|{"Startup",-10}|");
-                foreach (var player in preset.PlayerOption)
-                {
-                    sb.AppendLine($"{$"Player{player.TargetPlayerId}",-15}|{player.Target,-10}|{player.HandCount,-10}|{player.StartupNumber,-10}");
-                }
-                Window.Menu.LargerContentBoard(sb.ToString().Split(Environment.NewLine));
-            }
-            else if(select == 1)
-            {
-                // TODO: Startup Game
-            }
-            else
-            {
-                var pre = GameOptionCreater(preset);
+                case 0:
+                    {
+                        StringBuilder sb = new();
+                        sb.AppendLine($"{preset.PresetName} 预设 {$"玩家数量 {preset.PlayerCount}",6}");
+                        sb.AppendLine();
+                        sb.AppendLine($"{"TargetPlayer",-15}|{"Target",-10}|{"Hand Count",-10}|{"Startup",-10}|");
+                        foreach (var player in preset.PlayerOption)
+                        {
+                            sb.AppendLine($"{$"Player{player.TargetPlayerId}",-15}|{player.Target,-10}|{player.HandCount,-10}|{player.StartupNumber,-10}");
+                        }
+                        Window.Menu.LargerContentBoard(sb.ToString().Split(Environment.NewLine));
+                        break;
+                    }
 
-                int saveoptselect = Window.Menu.WriteMenu(new()
-                {
-                    { "直接修改", "直接修改这个预设\n注意：将会覆盖这个预设的所有内容" },
-                    { "添加", "当作副本添加一个预设" }
-                });
+                case 1:
+                    return (preset, InfoPageStatus.SelectToPlay);
+                case 3:
+                    return (preset, InfoPageStatus.NoChanges);
+                default:
+                    {
+                        var pre = GamePresetCreater(preset);
 
-                if( saveoptselect == 0)
-                {
-                    return (pre, 0);
-                }
-                else
-                {
-                    return (pre, 1);
-                }
+                        int saveoptselect = Window.Menu.WriteMenu(new()
+                        {
+                            { "添加", "当作副本添加一个预设(推荐)" },
+                            { "直接修改", "直接修改这个预设\n注意：将会覆盖这个预设的所有内容" },
+                            { "不保存", "你确定你不保存？" }
+                        });
+
+                        return (pre, (InfoPageStatus)(saveoptselect + 1));
+                    }
             }
         }
     }
 
-    private static async void CreatePipe()
+    private static async void CreatePipe(Action<Preset> callback)
     {
         if(IsPipeOpened) { return; }
-
-        await Task.Run(() =>
+        NamedPipeServerStream namedPipe = new NamedPipeServerStream("HandsBump");
+        IsPipeOpened = true;
+        while(true)
         {
-            NamedPipeServerStream namedPipe = new NamedPipeServerStream("HandsBump");
-            IsPipeOpened = true;
-            while(true)
-            {
-                namedPipe.WaitForConnection();
+            await namedPipe.WaitForConnectionAsync();
+            string content = new StreamReader(namedPipe).ReadToEnd();
 
-                List<byte> bytes = new();
-                int vaildlen = 0;
-                while (true)
-                {
-                    byte[] data = new byte[4096];
-                    int count = namedPipe.Read(data, 0, data.Length);
-                    vaildlen += count;
-                    if (count == 0)
-                        break;
-                    bytes.AddRange(data);
-                }
-
-                Preset preset = JsonSerializer.Deserialize<Preset>(Encoding.UTF8.GetString(bytes.ToArray()[..vaildlen]));
-                Presets.Add(preset);
-            }
-        });
+            Preset preset = JsonSerializer.Deserialize<Preset>(content);
+            callback(preset);
+        }
     }
 
-    private static Preset GameOptionCreater(Preset preset = default)
+    private static Preset GamePresetCreater(Preset preset = default)
     {
-        var pre = Setting<Preset>((prop, type) =>
+        var pre = Setting((prop, type) =>
         {
             var list = (List<Preset.Player>)Convert.ChangeType(prop, type) ?? new List<Preset.Player>();
             while (true)
@@ -365,6 +369,10 @@ Startup:
             {
                 return;
             }
+            else
+            {
+
+            }
         }
     }
 
@@ -372,7 +380,6 @@ Startup:
     
     static void Test()
     {
-        //Window.Menu.LargerContentBoard(Enumerable.Repeat("我是测试1145141919810aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaassssssssssssssssssssssssssssssssssaaa", 50).ToArray());
         Console.WriteLine(Process.GetCurrentProcess().ProcessName);
         Console.ReadLine();
     }
@@ -438,7 +445,7 @@ Startup:
                 Console.WriteLine();
                 while (Console.ReadKey(true).Key == ConsoleKey.E)
                 {
-                    InitConsoleSizeStruct();
+                    InitConsoleSizeStructure();
                     canresize = true;
                     return;
                 }
@@ -452,7 +459,7 @@ Startup:
 
     
 
-    static (int playercount, Dictionary<int,List<int>>? option) GameArgumentCreater(ClassicPlayMode classicPlayMode)
+    static (int playercount, GameOption? option) GameArgumentCreater(ClassicPlayMode classicPlayMode)
     {
         switch (classicPlayMode)
         {
@@ -466,27 +473,21 @@ Startup:
         return (0, null);
     }
 
-    static (int playercount, Dictionary<int, List<int>>? option) FromOptionFileGameArgumentCreater(string json)
+    static (int playercount, GameOption? option) FromPresetArgumentCreater(Preset preset)
     {
-        try
+        GameOption gameoption = new();
+        preset.PlayerOption.ForEach(x =>
         {
-            return JsonSerializer.Deserialize<(int playercount, Dictionary<int, List<int>>? option)>(json);
-        }
-        catch (JsonException)
-        {
-            Console.Clear();
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("发生了一些错误。");
-            Console.WriteLine("您选择的配置预设 文件发生了错误。");
-            Console.WriteLine("该文件疑似被篡改，不应篡改这些文件。");
-            Console.WriteLine("建议：备份后使用 PSON解析器 辅助更改文件并保存文件。");
-            Console.WriteLine("按任意键继续...");
-            Console.ReadKey();
-            return (0, null);
-        }
+            gameoption.Add(x.TargetPlayerId, new List<int>
+            {
+                x.HandCount,
+                x.Target
+            });
+        });
+        return (preset.PlayerCount, new());
     }
 
-    static void ToGame(int playercount, Dictionary<int, List<int>>? option)
+    static void ToGame(int playercount, GameOption? option)
     {
         Game game = new Game();
         game.InitPlayers(playercount, option);

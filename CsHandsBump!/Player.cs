@@ -11,39 +11,36 @@ namespace HandsBump
     {
         private List<int> hands = new();
         private int target = 0;
-        private bool targetseted = false;
         private int stepcount = 0;
         private string name = string.Empty;
 
-        public int Target
-        {
-            get => target;
-            set
-            {
-                if (!targetseted)
-                    target = value;
-                targetseted = true;
-            }
-        }
+        public int Target { init => target = value; }
         public int StepCount { get => stepcount; }
         public List<int> Hands { get => hands; }
         public string Name { get => name; set => name = value; }
-
-        public Player(int handscount) 
-        {
-            for(int i = 0; i < handscount; i++)
+        public int HandCount 
+        { 
+            init
             {
-                hands.Add(0);
+                for(int i = 0; i < value; i++)
+                {
+                    hands.Add(0);
+                }
+            } 
+        }
+
+        public int StartupNumber
+        {
+            init
+            {
+                for(int i = 0; i < hands.Count; i++)
+                {
+                    hands[i] = value;
+                }
             }
         }
 
-        public void SetStartNumber(int number)
-        {
-            for(int i = 0; i < hands.Count; i++)
-            {
-                hands[i] = number;
-            }
-        }
+        public Player() { } 
 
         public void Add(Player srcPlayer, int srchandindex, int dsthandindex )
         {

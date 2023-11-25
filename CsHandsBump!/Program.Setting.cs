@@ -11,28 +11,28 @@ namespace HandsBump
         static T Setting<T>(Func<object, Type, object> OtherTypeProc, Func<object, Type, string> OtherTypeToString = null, T Default = default) where T : class, new()
         {
             MessageOutputer message = new MessageOutputer()
-        {
-            new MessageUnit()
             {
-                Title = "↑",
-                Description = "上一个属性"
-            },
-            new MessageUnit()
-            {
-                Title = "↓",
-                Description = "下一个属性"
-            },
-            new MessageUnit()
-            {
-                Title = "Other",
-                Description = "设置属性值"
-            },
-            new MessageUnit()
-            {
-                Title = "ESC",
-                Description = "退出并返回设置的结果"
-            }
-        };
+                new MessageUnit()
+                {
+                    Title = "↑",
+                    Description = "上一个属性"
+                },
+                new MessageUnit()
+                {
+                    Title = "↓",
+                    Description = "下一个属性"
+                },
+                new MessageUnit()
+                {
+                    Title = "Other",
+                    Description = "设置属性值"
+                },
+                new MessageUnit()
+                {
+                    Title = "ESC",
+                    Description = "退出并返回设置的结果"
+                }
+            };
             T result = Default == default ? new T() : Default;
             int select = 0, index = 0, selectcurleft = 0;
             PropertyInfo selectprop = default;

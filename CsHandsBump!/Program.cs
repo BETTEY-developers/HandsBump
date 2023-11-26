@@ -22,7 +22,9 @@ internal partial class Program
 
     static bool canresize = false;
 
-    
+    static Message AppMessageBar = new Message();
+
+
 
     public static void WriteLogo()
     {
@@ -39,7 +41,7 @@ internal partial class Program
             int select = Menu.WriteMenu(
                 new Dictionary<string, string>
                 {
-                { "经典", "传统的碰手指玩法，支持二人、三人或四人。\n默认每人两个hand，初始1点，每hand 5点收hand" },
+                { "经典", "传统的碰手指玩法，支持二人、三人或四人。\n默认每人两个hand，初始1点，每hand5点收hand" },
                 { "自定义", "支持自定义初始点数、结束点数、人数及hand数" },
                 { "返回上一级菜单", "返回上个菜单" }
                 });
@@ -183,7 +185,7 @@ Startup:
             sb.AppendLine($"{preset.PresetName} 预设 {$"玩家数量 {preset.PlayerCount}",6}");
             sb.AppendLine();
             sb.AppendLine($"{"TargetPlayer",-15}|{"Target",-10}|{"Hand Count",-10}|{"Startup",-10}|");
-            foreach(var player in preset.PlayerOption)
+            foreach(var player in preset.PlayerOption??new())
             {
                 sb.AppendLine($"{$"Player{player.TargetPlayerId}",-15}|{player.Target,-10}|{player.HandCount,-10}|{player.StartupNumber,-10}");
             }
@@ -210,7 +212,7 @@ Startup:
                 goto Startup;
             default:
                 {
-                    (Preset preset, InfoPageStatus status) = PresetInfoPage(presets[select - 3]);
+                    (Preset preset, InfoPageStatus status) = PresetInfoPage(Presets[select - 3]);
                     if(status == InfoPageStatus.NoChanges)
                         goto Startup;
                     else if(status == InfoPageStatus.CloneToNew)
@@ -226,6 +228,7 @@ Startup:
                     }
                     else if (status == InfoPageStatus.SelectToPlay)
                     {
+                        StartNewGame(preset);
                         break;
                     }
                     break;
@@ -353,10 +356,10 @@ Startup:
             int select = Menu.WriteMenu(
                 new Dictionary<string, string>
                 {
-                { "双人模式", "两个玩家" },
-                { "三人模式", "三个玩家" },
-                { "四人模式", "四个玩家" },
-                { "返回上一级菜单", "返回上个菜单" }
+                    { "双人模式", "两个玩家" },
+                    { "三人模式", "三个玩家" },
+                    { "四人模式", "四个玩家" },
+                    { "返回上一级菜单", "返回上个菜单" }
                 }
             );
             if (select == 3)
@@ -365,7 +368,7 @@ Startup:
             }
             else
             {
-
+                StartNewGame(GameArgumentCreater((ClassicPlayMode)select));
             }
         }
     }
@@ -426,9 +429,10 @@ Startup:
             int select = Menu.WriteMenu(
                 new Dictionary<string, string>
                 {
-                {"调整控制台大小", "当选择内容不正确时才可使用该选项" },
-                {"返回上一级菜单", "GTR0（"}
-                });
+                    {"调整控制台大小", "当选择内容不正确时才可使用该选项" },
+                    {"返回上一级菜单", "GTR0（"}
+                }
+            );
             if (select == 0)
             {
                 Console.Clear();
@@ -439,7 +443,7 @@ Startup:
                 Console.WriteLine();
                 while (Console.ReadKey(true).Key == ConsoleKey.E)
                 {
-                    InitConsoleSizeStructure();
+                    InitConsoleSizeStructure(true);
                     canresize = true;
                     return;
                 }
@@ -451,8 +455,6 @@ Startup:
         }
     }
 
-    
-
     static Preset GameArgumentCreater(ClassicPlayMode classicPlayMode)
     {
         switch (classicPlayMode)
@@ -461,7 +463,7 @@ Startup:
                 return new()
                 {
                     PlayerCount = 2,
-                    PresetName = "Two Players"
+                    PresetName = "Two Players",
                 };
             case ClassicPlayMode.ThreeTime:
                 return new()

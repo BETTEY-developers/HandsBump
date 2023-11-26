@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HandsBump.Options;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -12,16 +13,16 @@ namespace HandsBump
     internal partial class Program
     {
         [System.Runtime.InteropServices.DllImport("Kernel32.dll")]
-        static extern IntPtr GetStdHandle(uint nStdHandle);
+        static extern IntPtr GetStdHandle(nuint nStdHandle);
 
         [System.Runtime.InteropServices.DllImport("Kernel32.dll")]
-        static extern int SetConsoleMode(IntPtr hConsoleHandle, uint dwMode);
+        static extern int SetConsoleMode(IntPtr hConsoleHandle, nuint dwMode);
 
         [System.Runtime.InteropServices.DllImport("Kernel32.dll")]
         static extern int GetLastError();
 
         [System.Runtime.InteropServices.DllImport("Kernel32.dll")]
-        static extern int GetConsoleMode(IntPtr hConsoleHandle, ref uint lpMode);
+        static extern int GetConsoleMode(IntPtr hConsoleHandle, ref nuint lpMode);
 
         static bool SetConsoleOutMode()
         {
@@ -29,14 +30,14 @@ namespace HandsBump
             try
             {
                 IntPtr ConsoleHandle = GetStdHandle(0xFFFFFFF5);
-                uint mode = 0;
+                nuint mode = 0;
                 int getstatus = GetConsoleMode(ConsoleHandle, ref mode);
                 if (getstatus != 0)
                 {
                     _errorcode = GetLastError();
                     throw new Win32Exception(_errorcode);
                 }
-                int status = SetConsoleMode(ConsoleHandle, mode | 0x0004);
+                int status = SetConsoleMode(ConsoleHandle, mode | 0x0200);
                 if (status != 0)
                 {
                     _errorcode = GetLastError();
@@ -68,12 +69,23 @@ namespace HandsBump
             }
         }
 
-        static bool InitConsoleSizeStructure()
+        static bool InitConsoleSizeStructure(bool overwrite = false)
         {
             try
             {
-                StartupConsoleSize.Width = Console.WindowWidth;
-                StartupConsoleSize.Height = Console.WindowHeight;
+                if(!File.Exists("Setting.txt") || overwrite)
+                {
+                    var stream = File.CreateText("Setting.txt");
+                    StartupConsoleSize.Width = Console.WindowWidth;
+                    StartupConsoleSize.Height = Console.WindowHeight;
+                    JsonSerializer.Serialize(stream.BaseStream, StartupConsoleSize);
+                    stream.Close();
+                }
+                else
+                {
+                    string setting = File.ReadAllText("Setting.txt");
+                    StartupConsoleSize = JsonSerializer.Deserialize<ConsoleSize>(setting);
+                }
                 return false;
             }
             catch

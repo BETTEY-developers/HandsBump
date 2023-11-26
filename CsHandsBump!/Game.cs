@@ -45,21 +45,19 @@ internal class Game
         StartTime = DateTime.Now;
         id = Guid.NewGuid();
 
-        int playerindex = 0;
-
         this.playercount = preset.PlayerCount;
-        foreach(var playeroption in preset.PlayerOption)
+        for(int i = 0; i < preset.PlayerCount; i++)
         {
             string name = "";
 
             Console.Clear();
             Program.WriteLogo();
-            Console.WriteLine("请输入玩家 " + (playerindex + 1) + " 昵称：");
+            Console.WriteLine("请输入玩家 " + (i + 1) + " 昵称：");
             name = Console.ReadLine();
             
-            if (playeroption.Target - 1 == playerindex)
+            if ((preset.PlayerOption??new()).Count >= i+1 && preset.PlayerOption[i].TargetPlayerId - 1 == i)
             {
-                Player player = playeroption;
+                Player player = preset.PlayerOption[i];
                 player.Name = name;
                 players.Add(player);
             }
@@ -69,8 +67,8 @@ internal class Game
                 {
                     HandCount = 2,
                     Name = name,
-                    Target = 10,
-                    StartupNumber = 0
+                    Target = 5,
+                    StartupNumber = 1
                 });
             }
         }
@@ -79,7 +77,7 @@ internal class Game
         status.WinPlayer = -1;
     }
 
-    public Player GetCurrentPlayer() => players[status.CurrentPlayer];
+    public Player GetCurrentPlayer() => players[status.CurrentPlayer % playercount];
 
     public Player GetPlayerFromIndex(int index) => players[index];
 
@@ -116,6 +114,27 @@ internal class Game
         };
 
         games.Add(gd);
+    }
+
+    public List<Player> GetPlayers() => players;
+
+    public Player GetWinPlayer()
+    {
+        if (status.WinPlayer == -1)
+            return null;
+
+        int maxindex = 0;
+        int lastindex = 0;
+        for(int i = 1; i < players.Count; i++)
+        {
+            if (players[i].GetSum() > players[lastindex].GetSum())
+                maxindex = i;
+            lastindex++;
+        }
+        
+        status.WinPlayer = maxindex;
+
+        return players[maxindex];
     }
 
     public static GameData GetGame(Func<GameData, bool> func)

@@ -3,35 +3,53 @@ using EUtility.StringEx.StringExtension;
 using System.Reflection;
 
 namespace HandsBump;
+using MessageUnitOrigin = KeyValuePair<string, string>;
 
 internal partial class Program
 {
-    public static class Message
+    public class Message
     {
-        public static Dictionary<string, KeyValuePair<string, string>> MessageUnit { get; set; } = new();
+        public ConsoleColor ForegroundColor { get; set; } = ConsoleColor.White;
+        public ConsoleColor BackgroundColor { get; set; } = ConsoleColor.Black;
 
-        public static void AddMessageUnit(string idkey, KeyValuePair<string, string> messageUnit)
+        public Dictionary<string, MessageUnitOrigin> MessageUnit { get; set; } = new();
+
+        public void AddMessageUnit(string idkey, MessageUnitOrigin messageUnit)
         {
             MessageUnit.Add(idkey, messageUnit);
         }
 
-        public static void SetMessageUnit(string idkey, KeyValuePair<string, string> messageUnit)
+        public void SetMessageUnit(string idkey, MessageUnitOrigin messageUnit)
         {
             MessageUnit[idkey] = messageUnit;
         }
 
-        public static void RemoveMessageUnit(string idkey)
+        public void RemoveMessageUnit(string idkey)
         {
             MessageUnit.Remove(idkey);
         }
 
-        public static void ResetMessageUnit()
+        public void ResetMessageUnit()
         {
             MessageUnit.Clear();
         }
 
-        public static void OutputMessage(int curt = 0)
+        public void InsertMessageUnit(int index,string idkey, MessageUnitOrigin messageUnit)
         {
+            var temp = MessageUnit.ToList();
+            temp.Insert(index, new KeyValuePair<string, MessageUnitOrigin>(idkey, messageUnit));
+            MessageUnit = temp.ToDictionary((x)=> x.Key, x => x.Value);
+        }
+
+        public void SetValue(string key, string value)
+        {
+            MessageUnit[key] = new MessageUnitOrigin(MessageUnit[key].Key, value);
+        }
+
+        public virtual void OutputMessage(int curt = 0)
+        {
+            Console.ForegroundColor = ForegroundColor;
+            Console.BackgroundColor = BackgroundColor;
             int currentTop = curt==0?Console.CursorTop:curt;
             int currentLeft = Console.CursorLeft;
             Console.CursorTop = Console.WindowHeight-1;
@@ -42,7 +60,7 @@ internal partial class Program
                 message.Add($"{unit.Value.Key} {unit.Value.Value}");
             }
             string output = string.Join("    ", message);
-            Console.Write(output + new string(' ',Console.WindowWidth - output.GetStringInConsoleGridWidth() - 2));
+            Console.Write(output + new string(' ',Console.WindowWidth - output.GetStringInConsoleGridWidth() - 0));
             Console.CursorTop = currentTop;
             Console.CursorLeft= currentLeft;
         }
@@ -51,23 +69,23 @@ internal partial class Program
     public static class Menu
     {
         static MessageOutputer menuguide = new()
+        {
+            new MessageUnit()
             {
-                new MessageUnit()
-                {
-                    Title = "↑",
-                    Description = "上一个选项"
-                },
-                new MessageUnit()
-                {
-                    Title = "↓",
-                    Description = "下一个选项"
-                },
-                new MessageUnit()
-                {
-                    Title = "Enter",
-                    Description = "确认选项"
-                }
-            };
+                Title = "↑",
+                Description = "上一个选项"
+            },
+            new MessageUnit()
+            {
+                Title = "↓",
+                Description = "下一个选项"
+            },
+            new MessageUnit()
+            {
+                Title = "Enter",
+                Description = "确认选项"
+            }
+        };
         static Menu()
         {
 
@@ -223,11 +241,11 @@ internal partial class Program
         public static void LargerContentBoard(string[] lines)
         {
             List<string> wordbreak = new();
-            Message.ResetMessageUnit();
-            Message.AddMessageUnit("Pre", new("↑", "往上显示一行"));
-            Message.AddMessageUnit("Next", new("↓", "往下显示一行"));
-            Message.AddMessageUnit("OK", new("Enter", "退出内容版"));
-            Message.AddMessageUnit("Process", new("当前", ""));
+            AppMessageBar.ResetMessageUnit();
+            AppMessageBar.AddMessageUnit("Pre", new("↑", "往上显示一行"));
+            AppMessageBar.AddMessageUnit("Next", new("↓", "往下显示一行"));
+            AppMessageBar.AddMessageUnit("OK", new("Enter", "退出内容版"));
+            AppMessageBar.AddMessageUnit("Process", new("当前", ""));
             foreach (string line in lines)
             {
                 if (line.GetStringInConsoleGridWidth() <= Console.WindowWidth)
@@ -264,8 +282,8 @@ internal partial class Program
                     Console.WriteLine(wordbreak[i]);
                 }
                 Console.SetCursorPosition(0, Console.WindowHeight-1);
-                Message.SetMessageUnit("Process", new("当前", $"{startline}-{endline}/{wordbreak.Count}"));
-                Message.OutputMessage(Console.WindowHeight - 1);
+                AppMessageBar.SetMessageUnit("Process", new("当前", $"{startline}-{endline}/{wordbreak.Count}"));
+                AppMessageBar.OutputMessage(Console.WindowHeight - 1);
                 Console.CursorVisible = true;
                 while (true)
                 {

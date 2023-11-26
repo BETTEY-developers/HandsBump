@@ -4,6 +4,5 @@ internal enum ClassicPlayMode
 {
     Twice,
     ThreeTime,
-    FourTime,
-    Custom
+    FourTime
 }

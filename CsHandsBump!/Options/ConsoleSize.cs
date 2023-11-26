@@ -1,6 +1,7 @@
 ﻿namespace HandsBump.Options;
 
-internal struct ConsoleSize
+[Serializable]
+public class ConsoleSize
 {
     public int Width;
     public int Height;

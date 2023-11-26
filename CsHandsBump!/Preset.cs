@@ -29,5 +29,5 @@ internal class Preset
     public int PlayerCount { get; set; }
 
     [MemberId(2, typeof(List<PlayerPreset>))]
-    public List<PlayerPreset> PlayerOption { get; set; }
+    public List<PlayerPreset> PlayerOption { get; set; } = new List<PlayerPreset>();
 } 

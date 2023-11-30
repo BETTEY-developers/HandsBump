@@ -1,20 +1,46 @@
 # HandsBump
-## introduction
-HandsBump, bump hands!
+## Introduction
+**HandsBump, bump hands!**
+
 This game is from a China chlid's game "Bump Finger". It mean fingers bump each other. For a example under:
 
 A hand is one. It bumps other child's hand, this hand is one too, they will merge each. This hand change to two.
 
-Same operater, but one of hands is five, this hand will collapse. When one of children all of hands all collapse, this child will win.
+Same operation, but one of hands is five, this hand will collapse. When one of children all of hands all collapse, this child will win.
 
+I take this to the program. It's so cool!!!!!
 
-I take this to the program.
+## Features
 
-## features
+### Game
+
+I take this to the program, but I add some of changes:
+- Players hand counts max can be **2,147,483,647**!!! (P.S. This is C# Int.MaxValue, so limit is this:P)
+- Startup from the **Preset**
+
+  Preset
+  - Player count
+  - Players Option
+    
+    - Hand Count
+    - Target
+    - Target Player Number
+
+And some changes of game under.
+
+In the game, if one hand is **Target** of this hand, it will collapse(default **Target** is five). All players has their **Score** and **Point**, when this game is over, them will add to the record and save, it's judges someone indicators of **Wins**.
+
+### UI and Important features
 
 This program has many menus. They are important.
 
-↑ ↓ ← → are for operate the menu items. This logic is so complex.
+Up, down, left, right arrows are for operate the menu items.
+
+And, save your game records to you computer, you can always see all of your records! 
+
+p.s. But hasn't user system:(
+
+P.S. this program is always resize your console, because this can keep good user experience for UI.
 
 ## packages
 

@@ -49,3 +49,7 @@ P.S. this program is always resize your console, because this can keep good user
 [@#BETTEY](https://github.com/BETTEY-developers) - [EUtility](https://github.com/BETTEY-developers/EUtility) (only code, no Nuget Package :P)
 
 Thanks all of packages author! Thanks! :D
+
+## The end
+
+This is me first to make console UI, something is no complated, sry:::
